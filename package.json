@@ -2,14 +2,11 @@
   "name": "spotify-profile-demo",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "dev": "concurrently --names frontend,backend --prefix-colors blue,green \"npm --prefix frontend run dev\" \"npm --prefix backend run dev\"",
+    "build": "npm --prefix frontend run build"
   },
   "devDependencies": {
-    "typescript": "~6.0.3",
-    "vite": "^8.3.4"
+    "concurrently": "^9.2.1"
   }
 }

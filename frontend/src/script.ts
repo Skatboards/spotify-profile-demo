@@ -1,4 +1,8 @@
-import { getAccessToken, redirectToAuthCodeFlow } from "./auth.ts";
+import {
+    copyAccessToken,
+    getAccessToken,
+    redirectToAuthCodeFlow
+} from "./auth.ts";
 import {
     populateCurrentlyPlaying,
     populateUI,
@@ -38,6 +42,30 @@ if (code) {
     const profile = await fetchProfile(accessToken);
     console.log(profile); // Profile data logs to console
     populateUI(profile);
+
+    const copyAccessTokenButton = document.getElementById(
+        "copyAccessTokenButton"
+    ) as HTMLButtonElement;
+    const copyAccessTokenStatus = document.getElementById(
+        "copyAccessTokenStatus"
+    )!;
+
+    copyAccessTokenButton.disabled = false;
+    copyAccessTokenButton.addEventListener("click", async () => {
+        copyAccessTokenButton.disabled = true;
+        copyAccessTokenStatus.textContent = "Copying access token...";
+
+        try {
+            await copyAccessToken(accessToken);
+            copyAccessTokenStatus.textContent = "Access token copied.";
+        } catch (error) {
+            console.error("Unable to copy the access token.", error);
+            copyAccessTokenStatus.textContent =
+                "Unable to copy the access token.";
+        } finally {
+            copyAccessTokenButton.disabled = false;
+        }
+    });
 
     const currentlyPlayingButton = document.getElementById(
         "currentlyPlayingButton"
