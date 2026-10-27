@@ -85,6 +85,14 @@ year). Successful responses contain only artist names:
 
 Spotify error responses and status codes are returned unchanged.
 
+## Bruno API test
+
+The [`bruno/`](bruno/) directory contains a Bruno collection for the top-artists
+endpoint. Open that directory in Bruno, select the `Local` environment, and set
+its secret `accessToken` variable to a token copied from the frontend. The
+request verifies the `200` response and artist-only response shape. See the
+[Bruno test instructions](bruno/README.md) for GUI and CLI usage.
+
 ## Verification
 
 ```bash
@@ -156,12 +164,12 @@ Validate the resolved Compose configuration, then build and start both services:
 ```bash
 sudo docker compose \
   --env-file deploy/production.env \
-  -f compose.production.yaml \
+  -f compose.yaml \
   config
 
 sudo docker compose \
   --env-file deploy/production.env \
-  -f compose.production.yaml \
+  -f compose.yaml \
   up -d --build
 ```
 
@@ -170,7 +178,7 @@ Check that both containers become healthy:
 ```bash
 sudo docker compose \
   --env-file deploy/production.env \
-  -f compose.production.yaml \
+  -f compose.yaml \
   ps
 
 curl http://127.0.0.1:8080/healthz
@@ -249,7 +257,7 @@ git pull --ff-only
 
 sudo docker compose \
   --env-file deploy/production.env \
-  -f compose.production.yaml \
+  -f compose.yaml \
   up -d --build --remove-orphans
 ```
 
@@ -258,11 +266,11 @@ Inspect service state and logs with:
 ```bash
 sudo docker compose \
   --env-file deploy/production.env \
-  -f compose.production.yaml \
+  -f compose.yaml \
   ps
 
 sudo docker compose \
   --env-file deploy/production.env \
-  -f compose.production.yaml \
+  -f compose.yaml \
   logs --tail=100
 ```
