@@ -1,0 +1,35 @@
+meta {
+  name: Get Top Tracks
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/top/tracks
+  body: none
+  auth: bearer
+}
+
+params:query {
+  time_range: {{timeRange}}
+  limit: {{limit}}
+  offset: {{offset}}
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("returns HTTP 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("returns a linked page of tracks", function () {
+    const body = res.getBody();
+
+    expect(body.items).to.be.an("array");
+    expect(body.page).to.be.an("object");
+    expect(body._links.self).to.be.an("object");
+  });
+}

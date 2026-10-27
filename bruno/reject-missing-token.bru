@@ -1,0 +1,24 @@
+meta {
+  name: Reject Missing Token
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/profile
+  body: none
+  auth: none
+}
+
+tests {
+  test("returns HTTP 401", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+
+  test("returns the normalized authentication error", function () {
+    const body = res.getBody();
+
+    expect(body.error.status).to.equal(401);
+    expect(body.error.code).to.equal("missing_access_token");
+  });
+}

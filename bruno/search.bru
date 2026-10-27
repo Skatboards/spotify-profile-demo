@@ -1,0 +1,35 @@
+meta {
+  name: Search
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/search
+  body: none
+  auth: bearer
+}
+
+params:query {
+  q: {{searchQuery}}
+  type: {{searchType}}
+  limit: {{limit}}
+  offset: {{offset}}
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("returns HTTP 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("returns linked search results", function () {
+    const body = res.getBody();
+
+    expect(body.results).to.be.an("object");
+    expect(body._links.self).to.be.an("object");
+  });
+}

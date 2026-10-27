@@ -1,0 +1,33 @@
+meta {
+  name: Get Recently Played
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/player/recently-played
+  body: none
+  auth: bearer
+}
+
+params:query {
+  limit: {{limit}}
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("returns HTTP 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("returns listening history", function () {
+    const body = res.getBody();
+
+    expect(body.items).to.be.an("array");
+    expect(body.page).to.have.property("after");
+    expect(body._links).to.have.property("next");
+  });
+}

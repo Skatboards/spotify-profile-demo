@@ -1,0 +1,29 @@
+meta {
+  name: Get Currently Playing
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/player/currently-playing
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("returns HTTP 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("returns a linked playback resource", function () {
+    const body = res.getBody();
+
+    expect(body.isPlaying).to.be.a("boolean");
+    expect(body).to.have.property("item");
+    expect(body._links.self.href).to.equal("/api/player/currently-playing");
+  });
+}

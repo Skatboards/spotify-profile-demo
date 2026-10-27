@@ -1,0 +1,29 @@
+meta {
+  name: Get Profile
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/profile
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("returns HTTP 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("returns a linked profile", function () {
+    const body = res.getBody();
+
+    expect(body).to.have.property("accountId");
+    expect(body).to.have.property("displayName");
+    expect(body._links.self.href).to.equal("/api/profile");
+  });
+}

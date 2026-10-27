@@ -1,0 +1,25 @@
+meta {
+  name: API Root
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api
+  body: none
+  auth: none
+}
+
+tests {
+  test("returns HTTP 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("advertises the proxy resources", function () {
+    const body = res.getBody();
+
+    expect(body._links.profile.href).to.equal("/api/profile");
+    expect(body._links.topArtists.href).to.equal("/api/top/artists");
+    expect(body._links.search.href).to.equal("/api/search");
+  });
+}

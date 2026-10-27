@@ -1,0 +1,36 @@
+meta {
+  name: Get Saved Albums
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/library/albums
+  body: none
+  auth: bearer
+}
+
+params:query {
+  limit: {{limit}}
+  offset: {{offset}}
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("returns HTTP 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("returns saved albums", function () {
+    const body = res.getBody();
+
+    expect(body.items).to.be.an("array");
+    body.items.forEach(function (item) {
+      expect(item).to.have.property("savedAt");
+      expect(item.album.type).to.equal("album");
+    });
+  });
+}
