@@ -3,6 +3,7 @@ import express from "express";
 
 const app = express();
 const port = Number.parseInt(process.env.PORT ?? "3000", 10);
+const host = process.env.HOST ?? "127.0.0.1";
 const frontendOrigin = process.env.FRONTEND_ORIGIN
     ?? "http://127.0.0.1:5173";
 
@@ -11,6 +12,10 @@ app.use(cors({
     methods: ["GET"],
     allowedHeaders: ["Authorization"]
 }));
+
+app.get("/healthz", (_request, response) => {
+    response.json({ status: "ok" });
+});
 
 app.get("/api/top/artists", async (request, response) => {
     const authorization = request.get("authorization");
@@ -81,12 +86,12 @@ app.use((_request, response) => {
     response.status(404).json({ error: "Not found." });
 });
 
-app.listen(port, (error) => {
+app.listen(port, host, (error) => {
     if (error) {
         console.error(`Unable to start the Spotify top artists API: ${error.message}`);
         process.exitCode = 1;
         return;
     }
 
-    console.log(`Spotify top artists API listening on http://127.0.0.1:${port}`);
+    console.log(`Spotify top artists API listening on http://${host}:${port}`);
 });

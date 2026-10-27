@@ -10,6 +10,8 @@ import {
 } from "./ui.ts";
 
 const clientId = import.meta.env.VITE_CLIENT_ID;
+const redirectUri = import.meta.env.VITE_REDIRECT_URI
+    ?? "http://127.0.0.1:5173/callback";
 
 if (!clientId) {
     throw new Error("VITE_CLIENT_ID is not configured.");
@@ -26,7 +28,7 @@ loginButton.addEventListener("click", async () => {
     loginStatus.textContent = "Redirecting to Spotify...";
 
     try {
-        await redirectToAuthCodeFlow(clientId);
+        await redirectToAuthCodeFlow(clientId, redirectUri);
     } catch (error) {
         console.error(error);
         loginStatus.textContent = "Unable to start Spotify login.";
@@ -38,7 +40,7 @@ if (code) {
     loginSection.hidden = true;
     profileSection.hidden = false;
 
-    const accessToken = await getAccessToken(clientId, code);
+    const accessToken = await getAccessToken(clientId, code, redirectUri);
     const profile = await fetchProfile(accessToken);
     console.log(profile); // Profile data logs to console
     populateUI(profile);
