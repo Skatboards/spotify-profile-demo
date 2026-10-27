@@ -1,0 +1,40 @@
+meta {
+  name: Get Top Artists
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/top/artists
+  body: none
+  auth: bearer
+}
+
+params:query {
+  time_range: {{timeRange}}
+  limit: {{limit}}
+  offset: {{offset}}
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("returns HTTP 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("returns only artist names", function () {
+    const body = res.getBody();
+
+    expect(body).to.be.an("array");
+
+    body.forEach(function (artist) {
+      expect(artist).to.be.an("object");
+      expect(artist).to.have.all.keys("name");
+      expect(artist.name).to.be.a("string");
+      expect(artist.name).not.to.be.empty;
+    });
+  });
+}
