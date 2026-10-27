@@ -8,7 +8,7 @@ COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts \
     && npm cache clean --force
 
-COPY --chown=node:node server.mjs ./
+COPY --chown=node:node server.mjs app.mjs ./
 
 USER node
 

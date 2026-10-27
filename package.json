@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "concurrently --names frontend,backend --prefix-colors blue,green \"npm --prefix frontend run dev\" \"npm --prefix backend run dev\"",
-    "build": "npm --prefix frontend run build"
+    "build": "npm --prefix frontend run build",
+    "test": "npm --prefix backend test"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

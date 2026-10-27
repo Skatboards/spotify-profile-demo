@@ -27,3 +27,4 @@ dist-ssr
 *.sw?
 
 deploy/production.env
+spotify-header.txt

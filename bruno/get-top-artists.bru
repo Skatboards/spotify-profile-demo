@@ -1,7 +1,7 @@
 meta {
   name: Get Top Artists
   type: http
-  seq: 1
+  seq: 3
 }
 
 get {
@@ -25,16 +25,18 @@ tests {
     expect(res.getStatus()).to.equal(200);
   });
 
-  test("returns only artist names", function () {
+  test("returns a linked page of artists", function () {
     const body = res.getBody();
 
-    expect(body).to.be.an("array");
+    expect(body.items).to.be.an("array");
+    expect(body.page).to.be.an("object");
+    expect(body._links.self).to.be.an("object");
 
-    body.forEach(function (artist) {
+    body.items.forEach(function (artist) {
       expect(artist).to.be.an("object");
-      expect(artist).to.have.all.keys("name");
       expect(artist.name).to.be.a("string");
       expect(artist.name).not.to.be.empty;
+      expect(artist._links).to.have.property("spotify");
     });
   });
 }

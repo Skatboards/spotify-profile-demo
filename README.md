@@ -4,8 +4,8 @@ This project contains two independent applications:
 
 - `frontend/`: a Vite application that authenticates users with Spotify's
   Authorization Code flow with PKCE.
-- `backend/`: a minimal Express API that forwards the authenticated user's
-  request to Spotify's top-artists endpoint.
+- `backend/`: a read-only Express proxy that exposes normalized Spotify profile,
+  personalization, library, playlist, playback, and search resources.
 
 The frontend owns authentication. The backend does not store or refresh Spotify
 tokens and does not require a Spotify client secret.
@@ -59,43 +59,128 @@ The frontend is available at `http://127.0.0.1:5173` and the backend listens on
 `http://127.0.0.1:3000`. Set `PORT` or `FRONTEND_ORIGIN` when starting the
 backend to override its defaults.
 
-After logging in, use **Copy access token** to copy the current in-memory token
-for manual testing. Treat the token as a password: only paste it into tools you
-trust, and do not commit or share it. Log in again after this application's
-scope configuration changes so the copied token includes `user-top-read`.
+After logging in, use **Copy access token** and save the authorization header in
+`spotify-header.txt` at the repository root:
+
+```text
+Authorization: Bearer YOUR_COPIED_ACCESS_TOKEN
+```
+
+The file is ignored by Git. Treat it as a password: do not commit or share it,
+and only use it with tools you trust. Log in again after scope configuration
+changes so the token contains the newly requested permissions, then update the
+file with the new token.
+
+The frontend requests these read-only scopes:
+
+- `user-read-private`
+- `user-read-email`
+- `user-read-currently-playing`
+- `user-read-recently-played`
+- `user-top-read`
+- `user-library-read`
+- `playlist-read-private`
+- `playlist-read-collaborative`
+
+## Proxy API
+
+`GET /api` is an unauthenticated discovery endpoint. Every other `/api`
+endpoint requires `Authorization: Bearer <access-token>`.
+
+| Endpoint | Query parameters |
+| --- | --- |
+| `GET /api/profile` | None |
+| `GET /api/top/artists` | `time_range`, `limit`, `offset` |
+| `GET /api/top/tracks` | `time_range`, `limit`, `offset` |
+| `GET /api/library/tracks` | `market`, `limit`, `offset` |
+| `GET /api/library/albums` | `market`, `limit`, `offset` |
+| `GET /api/playlists` | `limit`, `offset` |
+| `GET /api/player/currently-playing` | `market`, `additional_types` |
+| `GET /api/player/recently-played` | `limit`, `after`, `before` |
+| `GET /api/search` | `q`, `type`, `market`, `limit`, `offset` |
+
+Search supports `artist`, `track`, `album`, and `playlist`, including a
+comma-separated combination. Recent-history requests may use `after` or
+`before`, but not both.
 
 Request the authenticated user's top artists with:
 
 ```bash
 curl "http://127.0.0.1:3000/api/top/artists?time_range=medium_term&limit=5&offset=0" \
-  --header "Authorization: Bearer YOUR_COPIED_ACCESS_TOKEN"
+  --header @spotify-header.txt
 ```
 
-Supported query parameters are `time_range`, `limit`, and `offset`. Valid time
-ranges are `short_term` (approximately four weeks), `medium_term`
-(approximately six months and the default), and `long_term` (approximately one
-year). Successful responses contain only artist names:
+Valid top-item time ranges are `short_term` (approximately four weeks),
+`medium_term` (approximately six months and the default), and `long_term`
+(approximately one year). Collection responses include normalized resources,
+page metadata, and relative HATEOAS links:
 
 ```json
-[
-  { "name": "First Artist" },
-  { "name": "Second Artist" }
-]
+{
+  "items": [
+    {
+      "type": "artist",
+      "id": "spotify-artist-id",
+      "name": "First Artist",
+      "imageUrl": "https://i.scdn.co/image/example",
+      "spotifyUrl": "https://open.spotify.com/artist/spotify-artist-id",
+      "_links": {
+        "spotify": {
+          "href": "https://open.spotify.com/artist/spotify-artist-id"
+        }
+      }
+    }
+  ],
+  "page": {
+    "limit": 5,
+    "offset": 0,
+    "total": 1
+  },
+  "_links": {
+    "self": {
+      "href": "/api/top/artists?time_range=medium_term&limit=5&offset=0"
+    },
+    "next": null,
+    "previous": null,
+    "profile": {
+      "href": "/api/profile"
+    }
+  }
+}
 ```
 
-Spotify error responses and status codes are returned unchanged.
+Query names and documented value ranges are validated before contacting
+Spotify. Errors use a consistent envelope while preserving relevant Spotify
+status codes:
+
+```json
+{
+  "error": {
+    "status": 401,
+    "code": "missing_access_token",
+    "message": "A Spotify bearer access token is required."
+  },
+  "_links": {
+    "self": { "href": "/api/profile" }
+  }
+}
+```
+
+Spotify `429` responses also forward the `Retry-After` header. Upstream network
+failures or unusable Spotify responses return `502`.
 
 ## Bruno API test
 
-The [`bruno/`](bruno/) directory contains a Bruno collection for the top-artists
-endpoint. Open that directory in Bruno, select the `Local` environment, and set
-its secret `accessToken` variable to a token copied from the frontend. The
-request verifies the `200` response and artist-only response shape. See the
+The [`bruno/`](bruno/) directory contains requests and response assertions for
+every proxy endpoint, API discovery, and missing authentication. Open that
+directory in Bruno, select an environment, and set its secret `accessToken`
+variable to a token copied from the frontend. See the
 [Bruno test instructions](bruno/README.md) for GUI and CLI usage.
 
 ## Verification
 
 ```bash
+npm test
 npm run build
 ```
 
@@ -234,7 +319,7 @@ https://spotify.example.com/callback
 
 Spotify requires HTTPS for non-loopback redirect URIs. Log in again through the
 deployed frontend so the access token is created with the production callback
-and the `user-top-read` scope.
+and all configured read-only scopes.
 
 Verify the public application and API:
 
@@ -242,7 +327,7 @@ Verify the public application and API:
 curl --fail --show-error "https://${APP_DOMAIN}/"
 
 curl "https://${APP_DOMAIN}/api/top/artists?time_range=medium_term&limit=5&offset=0" \
-  --header "Authorization: Bearer YOUR_COPIED_ACCESS_TOKEN"
+  --header @spotify-header.txt
 ```
 
 Ports 3000 and 8080 should not be reachable through the droplet's public IP.
